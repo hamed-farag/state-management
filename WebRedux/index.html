@@ -22,7 +22,7 @@
       </button>
       <ul id="goalslist"></ul>
     </div>
-    <script src="./stateManagement.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
     <script>
       // <!-- State Management Utils and Setup -->
       const todoReducer = function (state = [], action) {
@@ -47,13 +47,6 @@
           default:
             return state;
         }
-      };
-
-      const rootReducer = function (state = {}, action) {
-        return {
-          todo: todoReducer(state.todo, action),
-          goals: goalReducer(state.goals, action),
-        };
       };
 
       ////////////////////// Action Creators
@@ -89,7 +82,12 @@
       }
       //////////////////////////////////////////////
 
-      const store = createStore(rootReducer);
+      const store = Redux.createStore(
+        Redux.combineReducers({
+          todo: todoReducer,
+          goals: goalReducer,
+        })
+      );
 
       store.subscribe(() => {
         const { todo, goals } = store.getState();
