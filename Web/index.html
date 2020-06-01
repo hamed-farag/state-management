@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>State Management</title>
+  </head>
+  <body>
+    <div>
+      <h1>Todo</h1>
+      <input id="txtTodo" placeholder="Add Todo" type="text" value="" />
+      <button id="btnTodo">
+        Add
+      </button>
+      <ul id="todolist"></ul>
+    </div>
+    <div>
+      <h1>Goals</h1>
+      <input id="txtGoal" placeholder="Add Goals" type="text" value="" />
+      <button id="btnGoal">
+        Add
+      </button>
+      <ul id="goalslist"></ul>
+    </div>
+    <script src="./stateManagement.js"></script>
+    <script>
+      // <!-- State Management Utils and Setup -->
+      const todoReducer = function (state = [], action) {
+        switch (action.type) {
+          case "ADD_TODO":
+            return [...state, action.payload];
+          default:
+            return state;
+        }
+      };
+
+      const goalReducer = function (state = [], action) {
+        switch (action.type) {
+          case "ADD_GOAL":
+            return [...state, action.payload];
+          case "TOGGLE_GOAL":
+            return state.map((item) =>
+              item.id === action.payload.id
+                ? { ...item, complete: !item.complete }
+                : item
+            );
+          default:
+            return state;
+        }
+      };
+
+      const rootReducer = function (state = {}, action) {
+        return {
+          todo: todoReducer(state.todo, action),
+          goals: goalReducer(state.goals, action),
+        };
+      };
+
+      ////////////////////// Action Creators
+      function addTodoActionCreator(id, text) {
+        return {
+          type: "ADD_TODO",
+          payload: {
+            id,
+            text,
+            complete: false,
+          },
+        };
+      }
+
+      function addGoalActionCreator(id, text) {
+        return {
+          type: "ADD_GOAL",
+          payload: {
+            id,
+            text,
+            complete: false,
+          },
+        };
+      }
+
+      function toggleGoalActionCreator(id) {
+        return {
+          type: "TOGGLE_GOAL",
+          payload: {
+            id,
+          },
+        };
+      }
+      //////////////////////////////////////////////
+
+      const store = createStore(rootReducer);
+
+      store.subscribe(() => {
+        const { todo, goals } = store.getState();
+
+        renderGoals(goals);
+        renderTodo(todo);
+      });
+
+      /////////////////////////////////////////////////////////////////////////////////////
+
+      ////////////// Utils
+      function generateId() {
+        return (
+          Math.random().toString(36).substring(2) +
+          new Date().getTime().toString(36)
+        );
+      }
+      ////////////// UI Script
+      function addTodo() {
+        const todoValue = document.getElementById("txtTodo").value;
+        store.dispatch(addTodoActionCreator(generateId(), todoValue));
+      }
+      function addGoal() {
+        const goalValue = document.getElementById("txtGoal").value;
+        store.dispatch(addGoalActionCreator(generateId(), goalValue));
+      }
+
+      function toggleGoal(id) {
+        store.dispatch(toggleGoalActionCreator(id));
+      }
+
+      function renderGoals(goals) {
+        document.getElementById("goalslist").innerHTML = "";
+
+        goals.forEach((goal) => {
+          const itemGoal = document.createElement("li");
+          const goalText = document.createTextNode(goal.text);
+          itemGoal.setAttribute("id", goal.id);
+          itemGoal.addEventListener("click", (event) => {
+            store.dispatch(toggleGoal(event.target.id));
+          });
+          const ff =
+            "'text-decoration-line: " +
+            (goal.complete ? "line-through'" : "blink'");
+          debugger;
+          itemGoal.style.textDecoration = goal.complete
+            ? "line-through"
+            : "blink";
+
+          itemGoal.appendChild(goalText);
+          document.getElementById("goalslist").appendChild(itemGoal);
+        });
+      }
+
+      function renderTodo(todo) {
+        document.getElementById("todolist").innerHTML = "";
+
+        todo.forEach((todo) => {
+          const itemTodo = document.createElement("li");
+          const todoText = document.createTextNode(todo.text);
+          itemTodo.appendChild(todoText);
+          document.getElementById("todolist").appendChild(itemTodo);
+        });
+      }
+
+      document.getElementById("btnTodo").addEventListener("click", addTodo);
+      document.getElementById("btnGoal").addEventListener("click", addGoal);
+    </script>
+  </body>
+</html>
